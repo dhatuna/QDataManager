@@ -29,8 +29,8 @@ class Debugger {
     }
 }
 
-public class QDataManager : NSObject, NSSecureCoding {
-    @objc public class var supportsSecureCoding: Bool {
+open class QDataManager : NSObject, NSSecureCoding {
+    @objc open class var supportsSecureCoding: Bool {
         fatalError("\(Self.self) must override `supportsSecureCoding` with `true`")
     }
     
