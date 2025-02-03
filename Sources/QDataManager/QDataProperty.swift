@@ -19,7 +19,7 @@ public class QDataProperty<T: Codable>: QDataEncodableProperty, QDataDecodablePr
     public var wrappedValue: T?
     public let key: String
     
-    init(_ key: String) {
+    public init(_ key: String) {
         self.key = key
     }
 
