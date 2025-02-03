@@ -1,6 +1,6 @@
 # QDataManager
 
-![![GitHub license][LicenseBadge]](https://raw.githubusercontent.com/dhatuna/QDataManager/master/LICENSE) [![Swift6 compatible][Swift6Badge]][Swift6Link]
+[![GitHub license][LicenseBadge]](https://raw.githubusercontent.com/dhatuna/QDataManager/master/LICENSE) [![Swift6 compatible][Swift6Badge]][Swift6Link]
 
 QDataManager is a lightweight and flexible data management framework for Swift, built on **SQLite3**, that provides secure encoding, automatic database handling, and easy-to-use property management.
 
