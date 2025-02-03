@@ -11,6 +11,13 @@
 import Foundation
 import SQLite3
 
+let kFileName = "settingsV1"
+let kFileExtension = "dat"
+let kFile = kFileName + "." + kFileExtension
+
+let kDirectory = FileManager.SearchPathDirectory.documentDirectory
+let kDomainMask = FileManager.SearchPathDomainMask.userDomainMask
+
 class Debugger {
     class var isEnabled: Bool {
         return false
@@ -22,13 +29,9 @@ class Debugger {
     }
 }
 
-class QDataManager : NSObject, NSSecureCoding {
-    @objc class var supportsSecureCoding: Bool {
+public class QDataManager : NSObject, NSSecureCoding {
+    @objc public class var supportsSecureCoding: Bool {
         fatalError("\(Self.self) must override `supportsSecureCoding` with `true`")
-    }
-
-    override class func classForKeyedArchiver() -> AnyClass {
-        return self
     }
     
     var version = Int32(1)
@@ -50,19 +53,19 @@ class QDataManager : NSObject, NSSecureCoding {
     
     @QDataProperty("uuid") var uuid: String?
     
-    required override init() {
+    required override public init() {
         super.init()
         assert(type(of: self).supportsSecureCoding, "\(type(of: self)) must implement `supportsSecureCoding`")
     }
 
-    required init(_ manager: QDataManager) {
+    required public init(_ manager: QDataManager) {
         super.init()
         self.version = manager.version
         
         self.uuid = manager.uuid
     }
     
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         super.init()
         
         let mirror = Mirror(reflecting: self)
@@ -77,7 +80,7 @@ class QDataManager : NSObject, NSSecureCoding {
         }
     }
     
-    func commit() {
+    public func commit() {
         guard let directory = NSSearchPathForDirectoriesInDomains(kDirectory, kDomainMask, true).first else {
             return
         }
@@ -94,7 +97,7 @@ class QDataManager : NSObject, NSSecureCoding {
         }
     }
     
-    func clear() {
+    public func clear() {
         let mirror = Mirror(reflecting: self)
         
         for child in mirror.children {
@@ -127,7 +130,7 @@ extension QDataManager {
         return clsArray
     }
     
-    class func loadDatabase() -> Self {
+    public class func loadDatabase() -> Self {
         guard let directory = NSSearchPathForDirectoriesInDomains(kDirectory, kDomainMask, true).first else {
             Debugger.printd("❌ Load database failed: Unable to find database file.")
             return Self()
@@ -205,11 +208,11 @@ extension QDataManager {
 }
 
 extension QDataManager: NSCopying, NSCoding {
-    func copy(with zone: NSZone? = nil) -> Any {
+    public func copy(with zone: NSZone? = nil) -> Any {
         return type(of: self).init(self)
     }
     
-    func encode(with aCoder: NSCoder) {
+    public func encode(with aCoder: NSCoder) {
         let mirror = Mirror(reflecting: self)
 
         for child in mirror.children {
