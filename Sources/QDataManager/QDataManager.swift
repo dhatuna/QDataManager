@@ -13,7 +13,7 @@ import SQLite3
 
 class Debugger {
     class var isEnabled: Bool {
-        return true
+        return false
     }
     
     class func printd(_ string: String) {

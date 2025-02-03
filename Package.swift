@@ -19,8 +19,7 @@ let package = Package(
         .target(
             name: "QDataManager",
             dependencies: [],
-            path: "Sources/QDataManager",
-            exclude: ["README.md"]
+            path: "Sources/QDataManager"
         ),
         .testTarget(
             name: "QDataManagerTests",
