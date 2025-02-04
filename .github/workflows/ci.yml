@@ -19,8 +19,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Swift 6.0 via Brew
-        run: brew install swift
+      - name: Install Swift 6.0
+        run: |
+          SWIFT_VERSION="6.0.3"
+          brew install swift
+          echo "export PATH=\"/opt/homebrew/opt/swift/bin:\$PATH\"" >> $HOME/.zshrc
+          echo "export PATH=\"/opt/homebrew/opt/swift/bin:\$PATH\"" >> $HOME/.bash_profile
+          source $HOME/.zshrc || source $HOME/.bash_profile
+          swift --version
 
       - name: Verify Swift version
         run: swift --version
