@@ -19,10 +19,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      
       - name: Install Swift 6.0
         run: |
           SWIFT_URL="https://download.swift.org/development/xcode/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-01-30-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-01-30-a-osx.pkg"
+          
+          # 파일 다운로드 및 존재 여부 확인
           curl -o swift.pkg "$SWIFT_URL"
+          
+          if [ ! -f swift.pkg ]; then
+            echo "❌ Swift package download failed!"
+            exit 1
+          fi
+
           sudo installer -pkg swift.pkg -target /
           echo 'export PATH="/Library/Developer/Toolchains/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-01-30-a.xctoolchain/usr/bin:$PATH"' >> $HOME/.zshrc
           source $HOME/.zshrc
