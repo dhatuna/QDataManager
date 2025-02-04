@@ -14,6 +14,9 @@ jobs:
   build:
     name: Build and Test
     runs-on: macos-latest
+    env:
+      PATH: /opt/homebrew/opt/swift/bin:${{ env.PATH }}
+      TOOLCHAINS: Swift-6.0.xctoolchain
 
     steps:
       - name: Checkout repository
@@ -24,9 +27,6 @@ jobs:
           SWIFT_VERSION="6.0.3"
           brew install swift
           sudo ln -sfn /opt/homebrew/opt/swift/Swift-6.0.xctoolchain /Applications/Xcode.app/Contents/Developer/Toolchains/Swift-6.0.xctoolchain
-          echo 'export PATH="/opt/homebrew/opt/swift/bin:$PATH"' >> $HOME/.bash_profile
-          echo 'export TOOLCHAINS=Swift-6.0.xctoolchain' >> $HOME/.bash_profile
-          source $HOME/.bash_profile
           swift --version
 
       - name: Verify Swift version
