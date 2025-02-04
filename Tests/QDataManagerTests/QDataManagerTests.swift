@@ -4,7 +4,7 @@ import XCTest
 
 @objc(DataManager)
 class DataManager: QDataManager {
-    @QDataProperty("name") var name: String?
+    @QDataProperty("name", defaultValue: "jon doe") var name: String?
     @QDataProperty("address") var address: String?
     
     override class var supportsSecureCoding: Bool {
@@ -23,13 +23,20 @@ final class QDataManagerTests: XCTestCase {
     
     func testChild() throws {
         let name = "test name"
+        let address = "test addr"
         
         let manager = DataManager.loadDatabase()
         manager.name = name
-        manager.address = "test addr"
+        manager.address = address
         manager.commit()
         
-        let loadedManager = DataManager.loadDatabase()
+        var loadedManager = DataManager.loadDatabase()
         XCTAssertEqual(loadedManager.name, name)
+        XCTAssertEqual(loadedManager.address, address)
+        
+        loadedManager.clear()
+        loadedManager = DataManager.loadDatabase()
+        XCTAssertEqual(loadedManager.name, "jon doe")
+        XCTAssertEqual(loadedManager.address, nil)
     }
 }

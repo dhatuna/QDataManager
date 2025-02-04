@@ -8,25 +8,29 @@
 import Foundation
 
 @propertyWrapper
-public class QDataProperty<T: Codable>: QDataEncodableProperty, QDataDecodableProperty {
-//    private var value: T?
-//    let key: String
-//    
-//    var wrappedValue: T? {
-//        get { value }
-//        set { value = newValue}
-//    }
+public class QDataProperty<T: Codable>: QDataEncodableProperty, QDataDecodableProperty, QDataPropertyProtocol {
+    private enum CodingKeys: String, CodingKey {
+        case wrappedValue
+        case key
+        case defaultValue
+    }
+
     public var wrappedValue: T?
     public let key: String
+    public let defaultValue: T?
     
-    public init(_ key: String) {
+    public init(_ key: String, defaultValue: T? = nil) {
         self.key = key
+        self.defaultValue = defaultValue
     }
 
     required public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.wrappedValue = try? container.decode(T.self)
-        self.key = ""
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // ✅ key와 defaultValue도 함께 복원
+        self.key = try container.decode(String.self, forKey: .key)
+        self.defaultValue = try? container.decode(T.self, forKey: .defaultValue)
+        self.wrappedValue = try? container.decode(T.self, forKey: .wrappedValue)
     }
 
     public func encode(to aCoder: NSCoder) {
@@ -48,5 +52,9 @@ public class QDataProperty<T: Codable>: QDataEncodableProperty, QDataDecodablePr
                 Debugger.printd("❌ Decoding error for key '\(key)': \(error)")
             }
         }
+    }
+    
+    func resetValue() {
+        wrappedValue = defaultValue
     }
 }

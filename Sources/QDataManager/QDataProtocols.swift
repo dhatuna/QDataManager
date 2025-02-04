@@ -18,3 +18,7 @@ public protocol QDataEncodableProperty: AnyObject, Encodable {
     var wrappedValue: ValueType? { get set }
     func encode(to aCoder: NSCoder)
 }
+
+protocol QDataPropertyProtocol {
+    func resetValue()
+}

@@ -101,8 +101,13 @@ open class QDataManager : NSObject, NSSecureCoding {
         let mirror = Mirror(reflecting: self)
         
         for child in mirror.children {
-            guard let key = child.label, Mirror(reflecting: child.value).displayStyle == .optional else { continue }
-            self.setValue(nil, forKey: key)
+            guard let key = child.label else { continue }
+            
+            if let propertyWrapper = child.value as? QDataPropertyProtocol {
+                propertyWrapper.resetValue()
+            } else {
+                self.setValue(nil, forKey: key)
+            }
         }
         commit()
     }
