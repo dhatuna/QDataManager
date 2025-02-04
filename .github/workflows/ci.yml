@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-      - develop
   pull_request:
     branches:
       - main
-      - develop
 
 jobs:
   build:
@@ -19,10 +17,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang libcurl4-openssl-dev libssl-dev
+
       - name: Install Swift 6.0
         run: |
-          sudo apt update
-          sudo apt install -y swiftlang
+          SWIFT_URL="https://download.swift.org/development/ubuntu2004/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-01-30-a/swift-6.0-DEVELOPMENT-SNAPSHOT-2024-01-30-a-ubuntu20.04.tar.gz"
+          wget "$SWIFT_URL" -O swift.tar.gz
+          tar xzf swift.tar.gz
+          sudo mv swift-6.0-DEVELOPMENT-SNAPSHOT-2024-01-30-a-ubuntu20.04 /usr/local/swift
+          echo 'export PATH="/usr/local/swift/usr/bin:$PATH"' >> $HOME/.bashrc
+          source $HOME/.bashrc
           
       - name: Verify Swift version
         run: swift --version
