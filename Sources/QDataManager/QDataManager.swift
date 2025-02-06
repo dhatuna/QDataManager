@@ -112,7 +112,7 @@ open class QDataManager : NSObject, NSSecureCoding {
 
 extension QDataManager {
     class func getAllClasses() -> [AnyClass] {
-        var clsArray: [AnyClass] = [self, NSString.self, NSNumber.self, NSData.self, QDataObject.self]
+        var clsArray: [AnyClass] = [self, NSString.self, NSNumber.self, NSData.self, NSArray.self, NSDictionary.self, QDataObject.self]
         
         let numberOfClasses = objc_getClassList(nil, 0)
         

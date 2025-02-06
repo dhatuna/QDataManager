@@ -27,7 +27,14 @@ public final class QDataProperty<T>: QDataPropertyProtocol {
     public func encode(to aCoder: NSCoder) {
         guard let value = wrappedValue else { return }
         
-        if let secureValue = value as? NSSecureCoding {
+        if let arrayValue = value as? [Any] {
+            let nsArray = arrayValue as NSArray
+            aCoder.encode(nsArray, forKey: key)
+            return
+        } else if let dictValue = value as? [AnyHashable: Any] {
+            let nsDict = dictValue as NSDictionary
+            aCoder.encode(nsDict, forKey: key)
+        } else if let secureValue = value as? NSSecureCoding {
             aCoder.encode(secureValue, forKey: key)
         } else if let codableValue = value as? Encodable {
             do {
