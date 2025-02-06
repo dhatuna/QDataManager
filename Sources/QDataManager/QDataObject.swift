@@ -7,12 +7,12 @@
 
 import Foundation
 
-public class QDataObject: NSObject, NSSecureCoding {
-    @objc public class var supportsSecureCoding: Bool {
+open class QDataObject: NSObject, NSSecureCoding {
+    @objc open class var supportsSecureCoding: Bool {
         fatalError("\(Self.self) must override `supportsSecureCoding` with `true`")
     }
     
-    public func encode(with coder: NSCoder) {
+    open func encode(with coder: NSCoder) {
         let mirror = Mirror(reflecting: self)
         
         for child in mirror.children {
