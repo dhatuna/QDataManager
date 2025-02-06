@@ -61,6 +61,72 @@ print("Username: \(loadedManager.username ?? "Unknown")")
 print("Email: \(loadedManager.email ?? "Unknown")")
 ```
 
+## Using QDataObject
+
+If you need to persist custom objects with automatic encoding/decoding, subclass QDataObject.
+QDataObject leverages NSSecureCoding with Mirror to automatically archive and unarchive all exposed properties.
+Make sure to mark properties with @objc if you plan to use KVC (Key-Value Coding) for property restoration.
+
+### Example: Defining a Custom Object
+```swift
+import QDataManager
+
+// Subclass QDataObject to get automatic NSSecureCoding support.
+class TestClass: QDataObject {
+    // Mark properties with @objc so that they are visible for KVC.
+    @objc var str: String?
+    @objc var int: Int = 0
+
+    // Override supportsSecureCoding to confirm secure coding compliance.
+    override public class var supportsSecureCoding: Bool {
+        return true
+    }
+}
+```
+
+### Example: Using QDataObject in Your Data Manager
+```swift
+    import QDataManager
+
+@objc(UserDataManager)
+class UserDataManager: QDataManager {
+    @QDataProperty("username") var username: String?
+    @QDataProperty("email") var email: String?
+    // You can now store custom objects by using QDataProperty.
+    @QDataProperty("testObject") var testObject: TestClass?
+    
+    override class var supportsSecureCoding: Bool {
+        return true
+    }
+}
+```
+
+### Saving and Loading Custom Objects
+```swift
+// Create or load your data manager.
+let userManager = UserDataManager.loadDatabase()
+
+// Set simple properties.
+userManager.username = "john_doe"
+userManager.email = "john@example.com"
+
+// Create and assign a custom object.
+let testObj = TestClass()
+testObj.str = "This is a test"
+testObj.int = 42
+userManager.testObject = testObj
+
+// Save the data manager.
+userManager.commit()
+
+// Later, load the data manager.
+let loadedManager = UserDataManager.loadDatabase()
+if let loadedTestObj = loadedManager.testObject {
+    print("Loaded Test Object String: \(loadedTestObj.str ?? "nil")")
+    print("Loaded Test Object Int: \(loadedTestObj.int)")
+}
+```
+
 ## Handling Secure Coding
 
 Ensure that your subclass implements `supportsSecureCoding`:

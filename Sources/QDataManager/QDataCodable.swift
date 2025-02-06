@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  QDataCodable.swift
 //  QDataManager
 //
 //  Created by Junkyu Jeon on 2/2/25.

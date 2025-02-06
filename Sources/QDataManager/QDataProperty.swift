@@ -8,7 +8,7 @@
 import Foundation
 
 @propertyWrapper
-public class QDataProperty<T: Codable>: QDataEncodableProperty, QDataDecodableProperty, QDataPropertyProtocol {
+public final class QDataProperty<T>: QDataPropertyProtocol {
     private enum CodingKeys: String, CodingKey {
         case wrappedValue
         case key
@@ -24,37 +24,38 @@ public class QDataProperty<T: Codable>: QDataEncodableProperty, QDataDecodablePr
         self.defaultValue = defaultValue
     }
 
-    required public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        // ✅ key와 defaultValue도 함께 복원
-        self.key = try container.decode(String.self, forKey: .key)
-        self.defaultValue = try? container.decode(T.self, forKey: .defaultValue)
-        self.wrappedValue = try? container.decode(T.self, forKey: .wrappedValue)
-    }
-
     public func encode(to aCoder: NSCoder) {
-        guard let wrappedValue = wrappedValue else { return }
+        guard let value = wrappedValue else { return }
         
-        do {
-            let encodedData = try JSONEncoder().encode(wrappedValue)
-            aCoder.encode(encodedData, forKey: key)
-        } catch {
-            Debugger.printd("❌ Encoding error for key '\(key)': \(error)")
+        if let secureValue = value as? NSSecureCoding {
+            aCoder.encode(secureValue, forKey: key)
+        } else if let codableValue = value as? Encodable {
+            do {
+                let data = try JSONEncoder().encode(QDataAnyEncodable(codableValue))
+                aCoder.encode(data, forKey: key)
+            } catch {
+                Debugger.printd("❌ JSON encoding error for key '\(key)': \(error)")
+            }
+        }
+        else {
+            Debugger.printd("❌ Unable to encode value for key '\(key)'")
         }
     }
     
     public func decode(from aDecoder: NSCoder) {
-        if let data = aDecoder.decodeObject(of: NSData.self, forKey: key) as? Data {
+        if let decoded = aDecoder.decodeObject(forKey: key) as? T {
+            self.wrappedValue = decoded
+        } else if let data = aDecoder.decodeObject(forKey: key) as? Data {
             do {
-                self.wrappedValue = try JSONDecoder().decode(T.self, from: data)
+                let decoded = try JSONDecoder().decode(QDataAnyDecodable.self, from: data)
+                self.wrappedValue = decoded.value as? T
             } catch {
-                Debugger.printd("❌ Decoding error for key '\(key)': \(error)")
+                Debugger.printd("❌ JSON decoding error for key '\(key)': \(error)")
             }
         }
     }
     
-    func resetValue() {
+    public func resetValue() {
         wrappedValue = defaultValue
     }
 }

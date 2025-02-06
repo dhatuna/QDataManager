@@ -20,7 +20,7 @@ let kDomainMask = FileManager.SearchPathDomainMask.userDomainMask
 
 class Debugger {
     class var isEnabled: Bool {
-        return false
+        return true
     }
     
     class func printd(_ string: String) {
@@ -43,7 +43,6 @@ open class QDataManager : NSObject, NSSecureCoding {
             
             for (key, value) in mirror.children {
                 guard let key = key else { continue }
-                
                 props[key] = value
             }
             
@@ -69,11 +68,9 @@ open class QDataManager : NSObject, NSSecureCoding {
         super.init()
         
         let mirror = Mirror(reflecting: self)
-        
         for child in mirror.children {
             guard let _ = child.label else { continue }
-
-            if let property = child.value as? any QDataDecodableProperty {
+            if let property = child.value as? any QDataPropertyProtocol {
                 Debugger.printd("📌 Decoded value: \(child.label!) = \(property)")
                 property.decode(from: aDecoder)
             }
@@ -103,7 +100,7 @@ open class QDataManager : NSObject, NSSecureCoding {
         for child in mirror.children {
             guard let key = child.label else { continue }
             
-            if let propertyWrapper = child.value as? QDataPropertyProtocol {
+            if let propertyWrapper = child.value as? (any QDataPropertyProtocol) {
                 propertyWrapper.resetValue()
             } else {
                 self.setValue(nil, forKey: key)
@@ -115,7 +112,7 @@ open class QDataManager : NSObject, NSSecureCoding {
 
 extension QDataManager {
     class func getAllClasses() -> [AnyClass] {
-        var clsArray: [AnyClass] = [self, NSString.self, NSNumber.self, NSData.self]
+        var clsArray: [AnyClass] = [self, NSString.self, NSNumber.self, NSData.self, QDataObject.self]
         
         let numberOfClasses = objc_getClassList(nil, 0)
         
@@ -127,7 +124,7 @@ extension QDataManager {
             
             for i in 0..<Int(actualCount) {
                 let cls: AnyClass = allClasses[i]
-                guard class_getSuperclass(cls) == self else { continue }
+                guard class_getSuperclass(cls) == self || class_getSuperclass(cls) == QDataObject.self else { continue }
                 clsArray.append(cls)
             }
         }
@@ -223,7 +220,7 @@ extension QDataManager: NSCopying, NSCoding {
         for child in mirror.children {
             guard let _ = child.label else { continue }
 
-            if let property = child.value as? any QDataEncodableProperty {
+            if let property = child.value as? any QDataPropertyProtocol {
                 Debugger.printd("📌 Encoded value: \(child.label!) = \(property)")
                 property.encode(to: aCoder)
             }

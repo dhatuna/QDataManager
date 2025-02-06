@@ -14,11 +14,15 @@ let package = Package(
             name: "QDataManager",
             targets: ["QDataManager"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/Flight-School/AnyCodable.git", from: "0.6.0")
+    ],
     targets: [
         .target(
             name: "QDataManager",
-            dependencies: [],
+            dependencies: [
+                "AnyCodable"
+            ],
             path: "Sources/QDataManager"
         ),
         .testTarget(
