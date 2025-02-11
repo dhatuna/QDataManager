@@ -21,7 +21,7 @@ To add `QDataManager` to your project, follow these steps:
 1. Open Xcode and go to `File` > `Add Packages`.
 2. Enter the repository URL:
    ```
-   https://github.com/your-username/QDataManager.git
+   https://github.com/dhatuna/QDataManager.git
    ```
 3. Select the latest version and click `Add Package`.
 4. Import QDataManager in your project:
