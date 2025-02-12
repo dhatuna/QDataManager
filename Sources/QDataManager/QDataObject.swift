@@ -36,7 +36,29 @@ open class QDataObject: NSObject, NSSecureCoding {
                 property.decode(from: coder)
             } else {
                 let decodedValue = coder.decodeObject(forKey: label)
-                self.setValue(decodedValue, forKey: label)
+                if let decodedValue = decodedValue {
+                    self.setValue(decodedValue, forKey: label)
+                } else {
+                    if let currentValue = self.value(forKey: label) {
+                        switch currentValue {
+                        case is Int:
+                            let intValue = coder.decodeInteger(forKey: label)
+                            self.setValue(intValue, forKey: label)
+                        case is Double:
+                            let doubleValue = coder.decodeDouble(forKey: label)
+                            self.setValue(doubleValue, forKey: label)
+                        case is Bool:
+                            let boolValue = coder.decodeBool(forKey: label)
+                            self.setValue(boolValue, forKey: label)
+                        case is Date:
+                            break
+                        default:
+                            Debugger.printd("Warning: Could not decode value for key \(label)")
+                        }
+                    } else {
+                        Debugger.printd("Warning: No current value for key \(label) to infer type")
+                    }
+                }
             }
         }
     }
