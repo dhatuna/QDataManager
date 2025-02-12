@@ -18,12 +18,20 @@ let kFile = kFileName + "." + kFileExtension
 let kDirectory = FileManager.SearchPathDirectory.documentDirectory
 let kDomainMask = FileManager.SearchPathDomainMask.userDomainMask
 
-class Debugger {
-    class var isEnabled: Bool {
-        return true
+private final class IsEnabledHolder: @unchecked Sendable {
+    var value: Bool = false
+}
+
+public final class Debugger: @unchecked Sendable {
+    private static let queue = DispatchQueue(label: "com.cocoslab.qdatamanager.DebuggerQueue")
+    private static let _holder = IsEnabledHolder()
+    
+    public static var isEnabled: Bool {
+        get { return queue.sync { _holder.value } }
+        set { queue.sync { _holder.value = newValue } }
     }
     
-    class func printd(_ string: String) {
+    public class func printd(_ string: String) {
         guard Debugger.isEnabled else { return }
         print(string)
     }

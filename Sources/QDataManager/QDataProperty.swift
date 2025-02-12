@@ -50,9 +50,26 @@ public final class QDataProperty<T>: QDataPropertyProtocol {
     }
     
     public func decode(from aDecoder: NSCoder) {
-        if let decoded = aDecoder.decodeObject(forKey: key) as? T {
+        let decodedObject = aDecoder.decodeObject(forKey: key)
+        
+        if let nsArray = decodedObject as? NSArray,
+           nsArray.firstObject is QDataObject {
+            let objectArray = nsArray.compactMap { $0 as? QDataObject }
+            
+            if let casted = objectArray as? T {
+                self.wrappedValue = casted
+                return
+            } else {
+                Debugger.printd("❌ Failed to cast array of QDataObject to \(T.self)")
+            }
+        }
+        
+        if let decoded = decodedObject as? T {
             self.wrappedValue = decoded
-        } else if let data = aDecoder.decodeObject(forKey: key) as? Data {
+            return
+        }
+        
+        if let data = decodedObject as? Data {
             do {
                 let decoded = try JSONDecoder().decode(QDataAnyDecodable.self, from: data)
                 self.wrappedValue = decoded.value as? T
