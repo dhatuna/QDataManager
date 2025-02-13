@@ -31,7 +31,7 @@ public final class QDataObjectArrayProperty<Element: QDataObject>: QDataProperty
     }
     
     public func decode(from aDecoder: NSCoder) {
-        if let nsArray = aDecoder.decodeObject(of: [NSArray.self, QDataObject.self], forKey: key) as? NSArray {
+        if let nsArray = aDecoder.decodeObject(of: QDataAllowedClasses.classes(), forKey: key) as? NSArray {
             var decodedArray: [Element] = []
             
             for case let element as Element in nsArray {

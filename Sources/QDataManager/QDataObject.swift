@@ -8,6 +8,13 @@
 import Foundation
 
 open class QDataObject: NSObject, NSSecureCoding {
+    public static let _dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXX"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+    
     @objc open class var supportsSecureCoding: Bool {
         fatalError("\(Self.self) must override `supportsSecureCoding` with `true`")
     }
@@ -30,6 +37,10 @@ open class QDataObject: NSObject, NSSecureCoding {
                 coder.encode(NSNumber(value: floatValue), forKey: label)
             } else if let boolValue = child.value as? Bool {
                 coder.encode(NSNumber(value: boolValue), forKey: label)
+            } else if let dateValue = child.value as? Date {
+                coder.encode(dateValue as NSDate, forKey: label)
+            } else if let strValue = child.value as? String {
+                coder.encode(strValue as NSString, forKey: label)
             } else {
                 coder.encode(child.value, forKey: label)
             }
@@ -39,50 +50,36 @@ open class QDataObject: NSObject, NSSecureCoding {
     required public init?(coder: NSCoder) {
         super.init()
         
-//        let mirror = Mirror(reflecting: self)
-//        for child in mirror.children {
-//            guard let label = child.label else { continue }
-//            
-//            print("\(label), \(child.value)")
-//            
-//            if let property = child.value as? (any QDataPropertyProtocol) {
-//                print("property : \(label) - \(property)")
-//                property.decode(from: coder)
-//            } else {
-//                if coder.containsValue(forKey: label) {
-//                    if let currentValue = self.value(forKey: label) {
-//                        print("no property : \(label) - \(currentValue)")
-//                        switch currentValue {
-//                        case is Int:
-//                            let intValue = coder.decodeInteger(forKey: label)
-//                            self.setValue(intValue, forKey: label)
-//                        case is Double:
-//                            let doubleValue = coder.decodeDouble(forKey: label)
-//                            self.setValue(doubleValue, forKey: label)
-//                        case is Bool:
-//                            let boolValue = coder.decodeBool(forKey: label)
-//                            self.setValue(boolValue, forKey: label)
-//                        case is Date:
-//                            if let date = coder.decodeObject(of: NSDate.self, forKey: label) as? Date {
-//                                self.setValue(date, forKey: label)
-//                            } else {
-//                                Debugger.printd("Warning: Could not decode Date for key \(label)")
-//                            }
-//                        default:
-//                            if let decodedValue = coder.decodeObject(forKey: label) {
-//                                self.setValue(decodedValue, forKey: label)
-//                            } else {
-//                                Debugger.printd("Warning: Could not decode value for key \(label)")
-//                            }
-//                        }
-//                    } else {
-//                        Debugger.printd("Warning: No current value for key \(label) to infer type")
-//                    }
-//                } else {
-//                    Debugger.printd("Warning: No value in coder for key \(label)")
-//                }
-//            }
-//        }
+        let mirror = Mirror(reflecting: self)
+        for child in mirror.children {
+            guard let label = child.label else { continue }
+            
+            if let property = child.value as? (any QDataPropertyProtocol) {
+                property.decode(from: coder)
+                continue
+            }
+            
+            var object = coder.decodeObject(of: QDataAllowedClasses.classes(), forKey: label)
+            if object is NSNull { object = nil }
+            
+            let defaultValue = self.value(forKey: label)
+            
+            switch child.value {
+            case is Int:
+                self.setValue((object as? NSNumber)?.intValue ?? defaultValue, forKey: label)
+            case is Double:
+                self.setValue((object as? NSNumber)?.doubleValue ?? defaultValue, forKey: label)
+            case is Float:
+                self.setValue((object as? NSNumber)?.floatValue ?? defaultValue, forKey: label)
+            case is Bool:
+                self.setValue((object as? NSNumber)?.boolValue ?? defaultValue, forKey: label)
+            case is Date:
+                self.setValue(object as? Date ?? defaultValue, forKey: label)
+            default:
+                self.setValue(object ?? defaultValue, forKey: label)
+                break
+            }
+        }
     }
     
     override public init() {

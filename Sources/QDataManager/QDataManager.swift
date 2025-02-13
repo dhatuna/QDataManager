@@ -10,6 +10,7 @@
 
 import Foundation
 import SQLite3
+import CoreFoundation
 
 let kFileName = "settingsV1"
 let kFileExtension = "dat"
@@ -36,6 +37,45 @@ public final class Debugger: @unchecked Sendable {
         print(string)
     }
 }
+
+private final class AllowedClasses: @unchecked Sendable {
+    var value: [AnyClass] = []
+}
+
+public final class QDataAllowedClasses: @unchecked Sendable {
+    private static let queue = DispatchQueue(label: "com.cocoslab.qdatamanager.QDataAllowedClasses")
+    private static let _holder = AllowedClasses()
+    
+    public static var additionalClasses: [AnyClass] {
+        get { return queue.sync { _holder.value } }
+        set { queue.sync { _holder.value = newValue } }
+    }
+    
+    public class func classes() -> [AnyClass] {
+        var clsArray: [AnyClass] = [NSString.self, NSNumber.self, NSData.self, NSArray.self, NSDictionary.self, NSDate.self, QDataObject.self, NSNull.self]
+        
+        clsArray.append(contentsOf: QDataAllowedClasses.additionalClasses)
+        
+        let numberOfClasses = objc_getClassList(nil, 0)
+        
+        if numberOfClasses > 0 {
+            let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: Int(numberOfClasses))
+            defer { allClasses.deallocate() }
+            
+            let actualCount = objc_getClassList(AutoreleasingUnsafeMutablePointer(allClasses), numberOfClasses)
+            
+            for i in 0..<Int(actualCount) {
+                let cls: AnyClass = allClasses[i]
+                guard class_getSuperclass(cls) == self || class_getSuperclass(cls) == QDataObject.self else { continue }
+                clsArray.append(cls)
+            }
+        }
+        
+        return clsArray
+    }
+}
+
+
 
 open class QDataManager : NSObject, NSSecureCoding {
     @objc open class var supportsSecureCoding: Bool {
@@ -119,31 +159,8 @@ open class QDataManager : NSObject, NSSecureCoding {
 }
 
 extension QDataManager {
-    @objc open class func AdditionalClasses() -> [AnyClass] {
-        return []
-    }
-    
     class func getAllClasses() -> [AnyClass] {
-        var clsArray: [AnyClass] = [self, NSString.self, NSNumber.self, NSData.self, NSArray.self, NSDictionary.self, NSDate.self, QDataObject.self]
-        
-        clsArray.append(contentsOf: AdditionalClasses())
-        
-        let numberOfClasses = objc_getClassList(nil, 0)
-        
-        if numberOfClasses > 0 {
-            let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: Int(numberOfClasses))
-            defer { allClasses.deallocate() }
-            
-            let actualCount = objc_getClassList(AutoreleasingUnsafeMutablePointer(allClasses), numberOfClasses)
-            
-            for i in 0..<Int(actualCount) {
-                let cls: AnyClass = allClasses[i]
-                guard class_getSuperclass(cls) == self || class_getSuperclass(cls) == QDataObject.self else { continue }
-                clsArray.append(cls)
-            }
-        }
-        
-        return clsArray
+        return QDataAllowedClasses.classes()
     }
     
     public class func loadDatabase() -> Self {
