@@ -96,5 +96,4 @@ open class QDataObject: NSObject, NSSecureCoding {
         }
         return nil
     }
-
 }
