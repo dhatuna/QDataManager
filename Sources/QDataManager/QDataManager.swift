@@ -131,7 +131,7 @@ open class QDataManager : NSObject, NSSecureCoding {
         }
     }
     
-    public func initialize() {
+    open func initialize() {
         assert(type(of: self).supportsSecureCoding, "\(type(of: self)) must implement `supportsSecureCoding`")
     }
     
