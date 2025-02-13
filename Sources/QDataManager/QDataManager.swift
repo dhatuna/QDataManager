@@ -102,11 +102,15 @@ open class QDataManager : NSObject, NSSecureCoding {
     
     required override public init() {
         super.init()
-        assert(type(of: self).supportsSecureCoding, "\(type(of: self)) must implement `supportsSecureCoding`")
+        
+        initialize()
     }
 
     required public init(_ manager: QDataManager) {
         super.init()
+        
+        initialize()
+        
         self.version = manager.version
         
         self.uuid = manager.uuid
@@ -114,6 +118,8 @@ open class QDataManager : NSObject, NSSecureCoding {
     
     required public init?(coder aDecoder: NSCoder) {
         super.init()
+        
+        initialize()
         
         let mirror = Mirror(reflecting: self)
         for child in mirror.children {
@@ -123,6 +129,10 @@ open class QDataManager : NSObject, NSSecureCoding {
                 property.decode(from: aDecoder)
             }
         }
+    }
+    
+    public func initialize() {
+        assert(type(of: self).supportsSecureCoding, "\(type(of: self)) must implement `supportsSecureCoding`")
     }
     
     public func commit() {
