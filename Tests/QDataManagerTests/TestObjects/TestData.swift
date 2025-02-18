@@ -35,7 +35,7 @@ class TestSubClass: TestDataObject {
     @objc var identifier: Int = -1
     @objc var type: String?
     @objc var type2: String?
-    @objc var moreData: [String:AnyObject]?
+    @objc var moreData: [String:Any]?
     
     class func getSubClass(with content: QTestSubdataStruct) -> TestSubClass {
         return TestSubClass(with: content)

@@ -1,6 +1,7 @@
 
 import XCTest
 @testable import QDataManager
+@testable import QUtils
 
 @objc(ADataManager)
 private class ADataManager: QDataManager {
@@ -29,7 +30,7 @@ final class DataManagerTests: XCTestCase {
     }
     
     func testChild() throws {
-        Debugger.isEnabled = true
+        QDebugger.isEnabled = true
         QDataAllowedClasses.additionalClasses = [ADataObject.self, TestClass.self, TestSubClass.self, ADataManager.self]
         
         let name = "test name"
@@ -39,6 +40,7 @@ final class DataManagerTests: XCTestCase {
         let clsInt = 42
         let clsItem = TestSubClass()
         clsItem.identifier = 84
+        clsItem.moreData = ["key": "value", "key2": "value2"]
         
         let manager = ADataManager.loadDatabase()
         manager.name = name
@@ -61,6 +63,7 @@ final class DataManagerTests: XCTestCase {
         XCTAssertEqual(loadedManager.testClass?.subdata?.identifier, clsItem.identifier)
         
         print(loadedManager.testClass?.subdata?.type ?? "")
+        print(loadedManager.testClass?.subdata?.moreData ?? [:])
         
         loadedManager.clear()
         loadedManager = ADataManager.loadDatabase()

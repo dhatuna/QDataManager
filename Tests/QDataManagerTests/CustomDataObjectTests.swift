@@ -8,6 +8,7 @@
 
 import XCTest
 @testable import QDataManager
+@testable import QUtils
 
 @objc(DataManager)
 private class DataManager: QDataManager {
@@ -47,7 +48,7 @@ final class QDataManagerTests: XCTestCase {
             return TestClass(with: item)
         }
         
-        Debugger.isEnabled = true
+        QDebugger.isEnabled = true
         
         var database = DataManager()
         database.clear()

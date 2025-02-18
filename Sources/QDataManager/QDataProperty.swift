@@ -7,6 +7,8 @@
 
 import Foundation
 
+import QUtils
+
 @propertyWrapper
 public final class QDataProperty<T>: QDataPropertyProtocol {
     public var wrappedValue: T?
@@ -36,11 +38,11 @@ public final class QDataProperty<T>: QDataPropertyProtocol {
                 aCoder.encode(data, forKey: key)
                 return
             } catch {
-                Debugger.printd("❌ JSON encoding error for key '\(key)': \(error)")
+                QDebugger.printd("❌ JSON encoding error for key '\(key)': \(error)")
                 return
             }
         }
-        Debugger.printd("❌ Unable to encode value for key '\(key)'")
+        QDebugger.printd("❌ Unable to encode value for key '\(key)'")
     }
     
     public func decode(from aDecoder: NSCoder) {
@@ -50,7 +52,7 @@ public final class QDataProperty<T>: QDataPropertyProtocol {
                     self.wrappedValue = try JSONDecoder().decode(type, from: data) as? T
                     return
                 } catch {
-                    Debugger.printd("❌ Decoding error for key '\(key)': \(error)")
+                    QDebugger.printd("❌ Decoding error for key '\(key)': \(error)")
                 }
             }
         } else if T.self == Int.self || T.self == Int?.self {
@@ -77,7 +79,7 @@ public final class QDataProperty<T>: QDataPropertyProtocol {
         } else if let decoded = aDecoder.decodeObject(forKey: key) as? T {
             self.wrappedValue = decoded
         } else {
-            Debugger.printd("⚠️ Unable to decode value for key: \(key) - Type \(T.self) not supported")
+            QDebugger.printd("⚠️ Unable to decode value for key: \(key) - Type \(T.self) not supported")
         }
         
         

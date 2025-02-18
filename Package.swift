@@ -12,21 +12,38 @@ let package = Package(
         .library(
             name: "QDataManager",
             targets: ["QDataManager"]),
+        .library(
+            name: "QJSONDataManager",
+            targets: ["QJSONDataManager"]),
     ],
     dependencies: [
         .package(url: "https://github.com/Flight-School/AnyCodable.git", from: "0.6.0")
     ],
     targets: [
         .target(
+            name: "QUtils",
+            dependencies: [],
+            path: "Sources/Utils"
+        ),
+        .target(
             name: "QDataManager",
             dependencies: [
-                "AnyCodable"
+                "AnyCodable",
+                "QUtils"
             ],
             path: "Sources/QDataManager"
         ),
+        .target(
+            name: "QJSONDataManager",
+            dependencies: [
+                "AnyCodable",
+                "QUtils"
+            ],
+            path: "Sources/QJSONDataManager"
+        ),
         .testTarget(
             name: "QDataManagerTests",
-            dependencies: ["QDataManager"],
+            dependencies: ["QDataManager", "QJSONDataManager", "QUtils"],
             path: "Tests/QDataManagerTests"
         ),
     ]

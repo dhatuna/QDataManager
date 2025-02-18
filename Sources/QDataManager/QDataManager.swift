@@ -12,31 +12,14 @@ import Foundation
 import SQLite3
 import CoreFoundation
 
+import QUtils
+
 let kFileName = "settingsV1"
 let kFileExtension = "dat"
 let kFile = kFileName + "." + kFileExtension
 
 let kDirectory = FileManager.SearchPathDirectory.documentDirectory
 let kDomainMask = FileManager.SearchPathDomainMask.userDomainMask
-
-private final class IsEnabledHolder: @unchecked Sendable {
-    var value: Bool = false
-}
-
-public final class Debugger: @unchecked Sendable {
-    private static let queue = DispatchQueue(label: "com.cocoslab.qdatamanager.DebuggerQueue")
-    private static let _holder = IsEnabledHolder()
-    
-    public static var isEnabled: Bool {
-        get { return queue.sync { _holder.value } }
-        set { queue.sync { _holder.value = newValue } }
-    }
-    
-    public class func printd(_ string: String) {
-        guard Debugger.isEnabled else { return }
-        print(string)
-    }
-}
 
 private final class AllowedClasses: @unchecked Sendable {
     var value: [AnyClass] = []
@@ -125,7 +108,7 @@ open class QDataManager : NSObject, NSSecureCoding {
         for child in mirror.children {
             guard let _ = child.label else { continue }
             if let property = child.value as? any QDataPropertyProtocol {
-                Debugger.printd("📌 Decoded value: \(child.label!) = \(property)")
+                QDebugger.printd("📌 Decoded value: \(child.label!) = \(property)")
                 property.decode(from: aDecoder)
             }
         }
@@ -146,9 +129,9 @@ open class QDataManager : NSObject, NSSecureCoding {
             let fileUrl = URL(fileURLWithPath: filePath)
             let archivedData = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: true)
             try archivedData.write(to: fileUrl)
-            Debugger.printd("✅ Saving data succeeded: \(filePath)")
+            QDebugger.printd("✅ Saving data succeeded: \(filePath)")
         } catch {
-            Debugger.printd("❌ Saving data failed: \(error)")
+            QDebugger.printd("❌ Saving data failed: \(error)")
         }
     }
     
@@ -175,7 +158,7 @@ extension QDataManager {
     
     public class func loadDatabase() -> Self {
         guard let directory = NSSearchPathForDirectoriesInDomains(kDirectory, kDomainMask, true).first else {
-            Debugger.printd("❌ Load database failed: Unable to find database file.")
+            QDebugger.printd("❌ Load database failed: Unable to find database file.")
             return Self()
         }
         
@@ -190,10 +173,10 @@ extension QDataManager {
             let classes = getAllClasses()
             
             if let dataManager = try NSKeyedUnarchiver.unarchivedObject(ofClasses: classes, from: fileData) as? Self {
-                Debugger.printd("✅ Loading data succeeded: \(filePath)")
+                QDebugger.printd("✅ Loading data succeeded: \(filePath)")
 
                 if dataManager.version != Self().version {
-                    Debugger.printd("⚠️ Database version has been changed: Database initialised.")
+                    QDebugger.printd("⚠️ Database version has been changed: Database initialised.")
                     let newDataManager = Self()
                     newDataManager.commit()
                     _ = newDataManager.sqlite()
@@ -203,10 +186,10 @@ extension QDataManager {
                 _ = dataManager.sqlite()
                 return dataManager
             } else {
-                Debugger.printd("⚠️ Unarchiving data failed: returning default value.")
+                QDebugger.printd("⚠️ Unarchiving data failed: returning default value.")
             }
         } catch {
-            Debugger.printd("❌ Loading data failed: \(error)")
+            QDebugger.printd("❌ Loading data failed: \(error)")
         }
 
         let newDataManager = Self()
@@ -239,11 +222,11 @@ extension QDataManager {
                     sqlite3_exec(database, versionQuery, nil, nil, nil)
                 }
             } else {
-                Debugger.printd("❌ Loading SQLite database failed")
+                QDebugger.printd("❌ Loading SQLite database failed")
                 return false
             }
         } catch {
-            Debugger.printd("❌ Initialising SQLite database failed: \(error)")
+            QDebugger.printd("❌ Initialising SQLite database failed: \(error)")
             return false
         }
         return true
@@ -262,7 +245,7 @@ extension QDataManager: NSCopying, NSCoding {
             guard let _ = child.label else { continue }
 
             if let property = child.value as? any QDataPropertyProtocol {
-                Debugger.printd("📌 Encoded value: \(child.label!) = \(property)")
+                QDebugger.printd("📌 Encoded value: \(child.label!) = \(property)")
                 property.encode(to: aCoder)
             }
         }

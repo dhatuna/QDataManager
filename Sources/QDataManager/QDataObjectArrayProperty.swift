@@ -7,6 +7,8 @@
 
 import Foundation
 
+import QUtils
+
 @propertyWrapper
 public final class QDataObjectArrayProperty<Element: QDataObject>: QDataPropertyProtocol {
     public var wrappedValue: [Element]?
@@ -27,7 +29,7 @@ public final class QDataObjectArrayProperty<Element: QDataObject>: QDataProperty
         }
         aCoder.encode(nsArray, forKey: key)
         
-        Debugger.printd("📌 Encoded '\(key)': \(nsArray)")
+        QDebugger.printd("📌 Encoded '\(key)': \(nsArray)")
     }
     
     public func decode(from aDecoder: NSCoder) {
@@ -41,7 +43,7 @@ public final class QDataObjectArrayProperty<Element: QDataObject>: QDataProperty
             self.wrappedValue = decodedArray
         }
 
-        Debugger.printd("📌 Decoded '\(key)': \(wrappedValue ?? [])")
+        QDebugger.printd("📌 Decoded '\(key)': \(wrappedValue ?? [])")
     }
     
     public func resetValue() {
