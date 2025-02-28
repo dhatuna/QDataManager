@@ -24,4 +24,19 @@ public final class QDebugger: @unchecked Sendable {
         guard QDebugger.isEnabled else { return }
         print(string)
     }
+    
+    public class func printProgressBar(progress: Double, total: Double, length: Int = 30) {
+        guard QDebugger.isEnabled else { return }
+        
+        let width = length
+        let percent = Int((progress / total) * 100)
+        let completed = Int((progress / total) * Double(width))
+        
+        let bar = String(repeating: "█", count: completed) + String(repeating: "-", count: width - completed)
+        print("\r[\(bar)] \(percent)%", terminator: "")
+
+        if percent == 100 {
+            print("\n✅ Done!")
+        }
+    }
 }
