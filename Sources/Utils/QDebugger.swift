@@ -20,9 +20,25 @@ public final class QDebugger: @unchecked Sendable {
         set { queue.sync { _holder.value = newValue } }
     }
     
-    public class func printd(_ string: String) {
-        guard QDebugger.isEnabled else { return }
-        print(string)
+    public class func printd(_ string: String, function: String = #function, line: Int = #line, file: String = #file) {
+        let filename = (file as NSString).lastPathComponent
+        printComps(["debug:", "[\(filename):\(line)]", function, "->", string])
+    }
+    
+    public class func printw(_ string: String, function: String = #function, line: Int = #line, file: String = #file) {
+        let filename = (file as NSString).lastPathComponent
+        printComps(["⚠️ waning:", "[\(filename):\(line)]", function, "->", string])
+    }
+    
+    public class func printe(_ string: String, function: String = #function, line: Int = #line, file: String = #file) {
+        let filename = (file as NSString).lastPathComponent
+        printComps(["❌ error:", "[\(filename):\(line)]", function, "->", string])
+    }
+    
+    public class func printComps(_ components: [String]) {
+        guard isEnabled else { return }
+//        FileHandle.standardOutput.write(components.joined(separator: " ").data(using: .utf8)!)
+        print(components.joined(separator: " "))
     }
     
     public class func printProgressBar(progress: Double, total: Double, length: Int = 30) {

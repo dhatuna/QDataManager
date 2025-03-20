@@ -22,6 +22,12 @@ final class JSONDataManagerTests: XCTestCase {
     }
     
     func testChild() throws {
+        QDebugger.isEnabled = true
+        
+        QDebugger.printd("debug message")
+        QDebugger.printw("warning message")
+        QDebugger.printe("error message")
+        
         var manager = UserIdManager.loadDatabase()
         manager.items.append(UserData(userID: "1"))
         manager.items.append(UserData(userID: "2"))
