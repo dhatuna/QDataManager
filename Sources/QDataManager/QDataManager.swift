@@ -127,7 +127,7 @@ open class QDataManager : NSObject, NSSecureCoding {
 
         do {
             let fileUrl = URL(fileURLWithPath: filePath)
-            let archivedData = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: true)
+            let archivedData = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
             try archivedData.write(to: fileUrl)
             QDebugger.printd("✅ Saving data succeeded: \(filePath)")
         } catch {
