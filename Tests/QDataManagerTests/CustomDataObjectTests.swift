@@ -71,7 +71,7 @@ final class QDataManagerTests: XCTestCase {
         
         database = DataManager.loadDatabase()
         
-        print(database.testArray.map({ item in
+        print(database.testArray?.map({ item in
             return item.identifier
         }))
         print(database.testArray?.first?.subdata?.identifier)

@@ -26,35 +26,61 @@ private final class AllowedClasses: @unchecked Sendable {
 }
 
 public final class QDataAllowedClasses: @unchecked Sendable {
-    private static let queue = DispatchQueue(label: "com.cocoslab.qdatamanager.QDataAllowedClasses")
-    private static let _holder = AllowedClasses()
+    private static let classStore = QThreadSafeStore<[AnyClass]>(initValue: [])
     
     public static var additionalClasses: [AnyClass] {
-        get { return queue.sync { _holder.value } }
-        set { queue.sync { _holder.value = newValue } }
+        get {
+            return classStore.value
+        }
+        set {
+            classStore.setValue(newValue)
+        }
     }
     
     public class func classes() -> [AnyClass] {
-        var clsArray: [AnyClass] = [NSString.self, NSNumber.self, NSData.self, NSArray.self, NSDictionary.self, NSDate.self, QDataObject.self, NSNull.self]
+        var allowedClasses = [AnyClass]()
+        var checkedClasses = Set<ObjectIdentifier>()
         
-        clsArray.append(contentsOf: QDataAllowedClasses.additionalClasses)
+        let baseClasses: [AnyClass] = [
+            NSArray.self,
+            NSMutableArray.self,
+            NSDictionary.self,
+            NSString.self,
+            NSDate.self,
+            NSNumber.self,
+            NSNull.self,
+            NSData.self,
+            QDataObject.self
+        ]
         
-        let numberOfClasses = objc_getClassList(nil, 0)
-        
-        if numberOfClasses > 0 {
-            let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: Int(numberOfClasses))
-            defer { allClasses.deallocate() }
+        for cls in baseClasses {
+            let id = ObjectIdentifier(cls)
             
-            let actualCount = objc_getClassList(AutoreleasingUnsafeMutablePointer(allClasses), numberOfClasses)
+            guard !checkedClasses.contains(id) else { continue }
             
-            for i in 0..<Int(actualCount) {
-                let cls: AnyClass = allClasses[i]
-                guard class_getSuperclass(cls) == self || class_getSuperclass(cls) == QDataObject.self else { continue }
-                clsArray.append(cls)
+            allowedClasses.append(cls)
+            checkedClasses.insert(id)
+        }
+        
+        for item in self.additionalClasses {
+            var userClass: AnyClass? = item
+            
+            while let cls = userClass {
+                if cls == NSObject.self || class_getSuperclass(cls) == nil {
+                    break
+                }
+                
+                let id = ObjectIdentifier(cls)
+                if !checkedClasses.contains(id) {
+                    allowedClasses.append(cls)
+                    checkedClasses.insert(id)
+                }
+                
+                userClass = class_getSuperclass(cls)
             }
         }
         
-        return clsArray
+        return allowedClasses
     }
 }
 
@@ -66,6 +92,7 @@ open class QDataManager : NSObject, NSSecureCoding {
     }
     
     var version = Int32(1)
+    @QDataProperty("uuid") var uuid: String?
     
     var allProperties: [String:Any] {
         get {
@@ -80,8 +107,6 @@ open class QDataManager : NSObject, NSSecureCoding {
             return props
         }
     }
-    
-    @QDataProperty("uuid") var uuid: String?
     
     required override public init() {
         super.init()
@@ -119,19 +144,13 @@ open class QDataManager : NSObject, NSSecureCoding {
     }
     
     public func commit() {
-        guard let directory = NSSearchPathForDirectoriesInDomains(kDirectory, kDomainMask, true).first else {
-            return
-        }
-
-        let filePath = (directory as NSString).appendingPathComponent("\(type(of: self)).\(kFileExtension)".lowercased())
-
+        let filePath = Self.databasePath(for: type(of: self))
         do {
-            let fileUrl = URL(fileURLWithPath: filePath)
-            let archivedData = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: true)
-            try archivedData.write(to: fileUrl)
-            QDebugger.printd("✅ Saving data succeeded: \(filePath)")
+            let data = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: true)
+            try data.write(to: URL(fileURLWithPath: filePath), options: .atomic)
+            QDebugger.printd("✅ Save Succeeded: \(filePath)")
         } catch {
-            QDebugger.printd("❌ Saving data failed: \(error)")
+            QDebugger.printd("❌ Save Failed: \(error)")
         }
     }
     
@@ -156,44 +175,55 @@ extension QDataManager {
         return QDataAllowedClasses.classes()
     }
     
+    private static func databasePath(for cls: AnyClass) -> String {
+        let directoryURL: URL
+        
+        #if DEBUG
+        directoryURL = FileManager.default.temporaryDirectory
+        #else
+        directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        #endif
+        
+        let filename = String(describing: cls).components(separatedBy: ".").last!.lowercased()
+        let fileURL = directoryURL.appendingPathComponent("\(filename).\(kFileExtension)")
+        return fileURL.path
+    }
+    
     public class func loadDatabase() -> Self {
-        guard let directory = NSSearchPathForDirectoriesInDomains(kDirectory, kDomainMask, true).first else {
-            QDebugger.printd("❌ Load database failed: Unable to find database file.")
-            return Self()
+        let filePath = databasePath(for: self)
+
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) else {
+            let newInstance = Self()
+            newInstance.commit()
+            return newInstance
         }
         
-        
-        let filename = ("\(type(of: self))".components(separatedBy: ".").first ?? "").lowercased()
-        let filePath = (directory as NSString).appendingPathComponent("\(filename).\(kFileExtension)".lowercased())
-
         do {
-            let fileUrl = URL(fileURLWithPath: filePath)
-            let fileData = try Data(contentsOf: fileUrl)
+            let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+            unarchiver.requiresSecureCoding = true
             
-            let classes = getAllClasses()
+            let dataManager = try unarchiver.decodeTopLevelObject(of: self, forKey: NSKeyedArchiveRootObjectKey)
+            try unarchiver.finishDecoding()
             
-            if let dataManager = try NSKeyedUnarchiver.unarchivedObject(ofClasses: classes, from: fileData) as? Self {
+            if let manager = dataManager {
                 QDebugger.printd("✅ Loading data succeeded: \(filePath)")
-
-                if dataManager.version != Self().version {
-                    QDebugger.printd("⚠️ Database version has been changed: Database initialised.")
-                    let newDataManager = Self()
-                    newDataManager.commit()
-                    _ = newDataManager.sqlite()
-                    return newDataManager
+                if manager.version != Self().version {
+                    QDebugger.printd("⚠️ Database version mismatch. Re-initializing.")
+                    let newManager = Self()
+                    newManager.commit()
+                    return newManager
                 }
-
-                _ = dataManager.sqlite()
-                return dataManager
+                _ = manager.sqlite()
+                return manager
             } else {
-                QDebugger.printd("⚠️ Unarchiving data failed: returning default value.")
+                QDebugger.printd("⚠️ Unarchiving failed. Creating a new one.")
             }
         } catch {
             QDebugger.printd("❌ Loading data failed: \(error)")
         }
 
         let newDataManager = Self()
-        _ = newDataManager.sqlite()
+        newDataManager.commit()
         return newDataManager
     }
     

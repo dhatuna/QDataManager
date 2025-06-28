@@ -27,20 +27,6 @@ open class QDataObject: NSObject, NSSecureCoding {
             
             if let property = child.value as? (any QDataPropertyProtocol) {
                 property.encode(to: coder)
-            } else if let dataObject = child.value as? QDataObject {
-                coder.encode(dataObject, forKey: label)
-            } else if let intValue = child.value as? Int {
-                coder.encode(NSNumber(value: intValue), forKey: label)
-            } else if let doubleValue = child.value as? Double {
-                coder.encode(NSNumber(value: doubleValue), forKey: label)
-            } else if let floatValue = child.value as? Float {
-                coder.encode(NSNumber(value: floatValue), forKey: label)
-            } else if let boolValue = child.value as? Bool {
-                coder.encode(NSNumber(value: boolValue), forKey: label)
-            } else if let dateValue = child.value as? Date {
-                coder.encode(dateValue as NSDate, forKey: label)
-            } else if let strValue = child.value as? String {
-                coder.encode(strValue as NSString, forKey: label)
             } else {
                 coder.encode(child.value, forKey: label)
             }

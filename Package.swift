@@ -43,7 +43,11 @@ let package = Package(
         ),
         .testTarget(
             name: "QDataManagerTests",
-            dependencies: ["QDataManager", "QJSONDataManager", "QUtils"],
+            dependencies: [
+                "QDataManager",
+                "QJSONDataManager",
+                "QUtils"
+            ],
             path: "Tests/QDataManagerTests"
         ),
     ]
