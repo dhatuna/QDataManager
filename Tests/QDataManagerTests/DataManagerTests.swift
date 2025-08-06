@@ -31,7 +31,8 @@ final class DataManagerTests: XCTestCase {
     
     func testChild() throws {
         QDebugger.isEnabled = true
-        QDataAllowedClasses.additionalClasses = [ADataObject.self, TestClass.self, TestSubClass.self, ADataManager.self]
+        QDataAllowedClasses.additionalClasses = [ADataObject.self, TestClass.self, TestSubClass.self, ADataManager.self,
+                                                 NSArray.self, NSDictionary.self]
         
         let name = "test name"
         let address = "test addr"

@@ -202,7 +202,8 @@ extension QDataManager {
             let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
             unarchiver.requiresSecureCoding = true
             
-            let dataManager = try unarchiver.decodeTopLevelObject(of: self, forKey: NSKeyedArchiveRootObjectKey)
+            let allowed = QDataAllowedClasses.classes()
+            let dataManager = try unarchiver.decodeTopLevelObject(of: allowed, forKey: NSKeyedArchiveRootObjectKey) as? Self
             try unarchiver.finishDecoding()
             
             if let manager = dataManager {
